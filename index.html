@@ -1,0 +1,755 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gửi em</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;600&family=Dancing+Script:wght@600&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --text: #fff6fb;
+    --muted: rgba(255, 246, 251, .62);
+    --glow: #ff8fc8;
+    --card: rgba(18, 8, 26, .5);
+    --border: rgba(255, 255, 255, .16);
+  }
+  html.lenis, html.lenis body { height: auto; }
+  .lenis.lenis-smooth { scroll-behavior: auto !important; }
+  .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+
+  html { background: #0a0310; }
+  body {
+    margin: 0;
+    color: var(--text);
+    font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+    background: radial-gradient(ellipse at 50% 35%, #3a0b2e 0%, #0a0310 75%);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+  }
+  #world { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
+  .vignette {
+    position: fixed; inset: 0; pointer-events: none; z-index: 1;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, .65) 100%);
+  }
+  #progress {
+    position: fixed; top: 0; left: 0; height: 2px; width: 0; z-index: 10;
+    background: var(--glow); box-shadow: 0 0 14px var(--glow);
+  }
+  main { position: relative; z-index: 2; }
+  .chunk[hidden] { display: none; }
+
+  .scene {
+    min-height: 100vh; min-height: 100svh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 16px; box-sizing: border-box;
+    perspective: 900px;
+  }
+  .scene > * { will-change: transform, opacity, filter; }
+
+  .line {
+    max-width: 860px; margin: 0;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(1.5rem, 4.4vw, 2.9rem);
+    line-height: 1.45; text-align: center;
+    text-shadow: 0 0 26px var(--glow), 0 2px 4px rgba(0, 0, 0, .9), 0 0 40px rgba(0, 0, 0, .9);
+  }
+
+  .intro, .outro { text-align: center; }
+  .intro h1, .outro p {
+    margin: 0;
+    font-family: 'Dancing Script', cursive; font-weight: 600;
+    font-size: clamp(3.8rem, 13vw, 7.5rem);
+    color: #fff;
+    text-shadow: 0 0 30px var(--glow), 0 0 60px var(--glow);
+  }
+  .hint { margin-top: 18px; color: var(--muted); font-size: .95rem; letter-spacing: .04em; }
+  .hint span { display: inline-block; animation: bob 1.8s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateY(6px); } }
+  .outro small { display: block; margin-top: 12px; color: var(--muted); font-size: 1rem; }
+
+  .card {
+    width: 100%; max-width: 460px; box-sizing: border-box;
+    padding: 28px 24px;
+    background: var(--card);
+    border: 1px solid var(--border); border-radius: 22px;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .45), 0 0 50px -20px var(--glow);
+    text-align: center;
+  }
+  .card .from { font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .card h2 {
+    margin: 10px 0 22px;
+    font-family: 'Playfair Display', Georgia, serif; font-weight: 400; font-style: italic;
+    font-size: clamp(1.35rem, 3.6vw, 1.8rem); line-height: 1.4;
+  }
+  .card .opts { display: flex; gap: 12px; justify-content: center; }
+  .card button {
+    font: inherit; font-weight: 600; cursor: pointer;
+    padding: 12px 28px; border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--text); background: rgba(255, 255, 255, .06);
+    transition: transform .2s, background .2s, box-shadow .2s;
+  }
+  .card button:hover:not(:disabled) { transform: translateY(-2px); background: rgba(255, 255, 255, .12); }
+  .card button.primary {
+    border-color: transparent; background: var(--glow); color: #1b0b22;
+    box-shadow: 0 6px 24px -6px var(--glow);
+  }
+  .card button:disabled { opacity: .45; cursor: default; transform: none; }
+  .card textarea {
+    width: 100%; box-sizing: border-box; min-height: 120px; resize: vertical;
+    padding: 14px 16px; margin-bottom: 16px;
+    font: inherit; font-size: 1rem; line-height: 1.5;
+    color: var(--text); background: rgba(0, 0, 0, .3);
+    border: 1px solid var(--border); border-radius: 14px; outline: none;
+  }
+  .card textarea:focus { border-color: var(--glow); }
+  .card textarea::placeholder { color: rgba(255, 246, 251, .4); }
+  .card .skip {
+    display: block; margin: 14px auto 0; padding: 0; border: 0; background: none;
+    color: var(--muted); font-weight: 400; font-size: .9rem; text-decoration: underline;
+  }
+  .card .skip:hover:not(:disabled) { transform: none; background: none; color: var(--text); }
+  .card .status { min-height: 1.4em; margin-top: 16px; font-size: .92rem; color: var(--muted); }
+  .card .status a { color: var(--glow); }
+  .card.done .status { color: var(--glow); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hint span { animation: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="world"></canvas>
+<div class="vignette"></div>
+<div id="progress"></div>
+<main id="story"></main>
+
+<script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
+<script>
+  // Mỗi nhóm là một cảnh nền (theme); mỗi chuỗi là một câu (một màn hình); object có `ask` là hộp thoại hồi âm.
+  const STORY = [
+    { theme: 'heart', items: [
+      'Anh muốn gửi đôi lời chin lũi chân thành nhất đến em',
+      { ask: 'Em có muốn đọc tiếp hăm?', options: ['Có', 'Hăm'] },
+    ] },
+    { theme: 'galaxy', items: [
+      'Anh nhớ em',
+      'Anh chin lũi',
+      'Anh đã rất nhớ em',
+    ] },
+    { theme: 'vortex', items: [
+      'Anh tự dằn vặt bản thân mình, những hành động của mình',
+      'Anh chin lũi em',
+      'Em gọi anh là Danh ác quỷ, hay Danh bái thiến gì cũm được',
+      'Anh xin nhận, nhận hết lỗi lầm cụa mình',
+      { ask: 'Em biết hăm?', options: ['Cóa', 'Hăm'] },
+    ] },
+    { theme: 'moon', items: [
+      'Đêm qua là một đêm dài của cuộc đời anh',
+      'Anh chẳng thể ngủ được',
+      'Anh hối hận vì những hành động cụa mình lắm',
+      'Anh bùn bản thân mình lắm, sao mà anh chẳng thể giữ được sự điềm tĩnh mà làm những hành động như thế',
+      'Anh buồn sầu lắm',
+    ] },
+    { theme: 'question', items: [
+      'Lúc đó, anh chỉ mong nhận được sự hồi đáp từ em, anh hông biết em đã đi dou',
+      { ask: 'Em đã đi dou?', input: true, placeholder: 'Em kể anh nghe nha…' },
+    ] },
+    { theme: 'sunrise', items: [
+      'Đến sáng dậy mới là lúc anh cảm thấy con tim mình lạc lõng nhất',
+      'Anh đã nghĩ rất nhìu',
+      'Anh đến bên em, mà để em phải bùn hết lần này đến lần khác',
+    ] },
+    { theme: 'broken', items: [
+      'Để con tim bé bỏng, mong manh dễ vỡ, cô nàng đang iu như em phải thất vọng mỗi khi anh làm lỗi',
+      'Những lúc anh hông giữ được sự điềm tĩnh như này, anh chỉ mún chui xún đất thui',
+      'Anh chẳng còn mặt mũi vào để nhìn em nựa, huhu',
+      'Cũm chẳng còn can đảm nào để cầu xin em tha thứ',
+    ] },
+    { theme: 'sea', items: [
+      'Anh như gục ngã, chẳng còn sức sống, chỉ mún nằm dài cả ngày ở nhà để tự dằn vặt về những hành động hoá thú cụa mình hic',
+      'Anh chin lũi, đã có những hành động làm em thấy anh thiếu tôn trọng em',
+      'Nhưng mà, anh chưa bao giờ xem em là dễ dãi',
+      'Huhu, cũng do tại anh hoá thú mà thui, anh mún chui xún đất',
+    ] },
+    { theme: 'infinity', items: [
+      'Anh đã hứa sẽ hông rời xa em, hông bỏ em giữa chợ, mà sao giờ đây anh lại là người trực tiếp gây ra điều này đây',
+      'Anh chẳng còn mặt mũi nào để gặp em huhu, anh khiến em nghĩ anh là người hong tốt',
+      'Mà cũm đúng thui, anh đã hong tốt với em',
+      'Làm gì có người tốt nào lại nỡ xem người mình yêu nhất là món chính chứ',
+    ] },
+    { theme: 'sorry', items: [
+      'Anh chin lũi, thật sự anh rất chin lũi',
+      'Anh đã sai rùi',
+      'Lúc đó phần con đã quá lấn át phần người trong con người anh, nên anh đã thể giữ được chính mình, mà làm vị với em, anh hối hận lắm',
+      'Em chửi anh i, em mắng anh i, anh sẽ đọc để nghiền ngẫm những lỗi lầm mình đã gây ra',
+      { ask: '', label: 'Em chửi anh i, em mắng anh i', input: true, placeholder: 'Em mắng anh ở đây nè…' },
+    ] },
+    { theme: 'road', items: [
+      'Anh cảm ơn em',
+      'Cảm ơn em vì đã lặn lội 15 km để đến ăn cơm cùng anh',
+      'Anh đã quó vô tâm khi hong cảm ơn em',
+      'Anh thật sự quó tồi tệ huhu',
+      'Người con gái mình yêu nhất đến để ăn cơm cùng mình, mà anh lại hong trân trọng điều đó',
+      'Anh lại đi làm những chuyện như vậy huhu',
+    ] },
+    { theme: 'ring', items: [
+      'Anh hứa sẽ hong thế nựa, lần sau anh sẽ hỏi ý kiến em trước òi mới dám làm huhu',
+      { ask: 'Được hăm em?', label: 'Lần sau anh hỏi ý kiến em trước — Được hăm em?', options: ['Có', 'Hăm'] },
+    ] },
+    { theme: 'movie', items: [
+      'Còn một thứ nựa',
+      'Về bộ phim mà em rủ anh xem hic',
+      'Nào mình i xem được hăm?',
+      { ask: 'Được hăm em?', label: 'Nào mình i xem phim được hăm?', options: ['Có', 'Hăm'] },
+    ] },
+    { theme: 'final', items: [
+      { ask: 'Đôi lời cuối cùng em mún nhắn nhủ đến anh là gì?', input: true, button: 'Nhắn cho anh', final: true, placeholder: 'Em viết gì cũm được…' },
+    ] },
+  ];
+</script>
+
+<script>
+  const ENDPOINT = 'https://formsubmit.co/ajax/lethanhdanh10052000@gmail.com';
+  const story = document.getElementById('story');
+  const lenis = window.Lenis ? new Lenis({ lerp: 0.06, wheelMultiplier: 0.9 }) : null;
+  if (lenis) requestAnimationFrame(function lenisRaf(t) { lenis.raf(t); requestAnimationFrame(lenisRaf); });
+
+  function el(tag, cls, text) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function scene(child, g, extra) {
+    const s = el('section', 'scene' + (extra ? ' ' + extra : ''));
+    s.dataset.g = g;
+    if (child) s.appendChild(child);
+    return s;
+  }
+
+  async function send(question, answer) {
+    const res = await fetch(ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        _subject: '💌 Em trả lời: ' + question,
+        'Câu hỏi': question,
+        'Em trả lời': answer,
+        'Thời gian': new Date().toLocaleString('vi-VN'),
+        _template: 'table',
+        _captcha: 'false',
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || String(data.success) === 'false') throw new Error(data.message || res.status);
+  }
+
+  function mailtoLink(question, answer) {
+    const a = el('a', null, 'gửi qua Gmail nha');
+    a.href = 'mailto:lethanhdanh10052000@gmail.com?subject=' +
+      encodeURIComponent('Em trả lời: ' + question) + '&body=' + encodeURIComponent(answer);
+    return a;
+  }
+
+  // Hiện đoạn tiếp theo và lướt êm tới câu đầu của nó.
+  function reveal(chunk) {
+    if (!chunk) return;
+    chunk.hidden = false;
+    requestAnimationFrame(() => {
+      const target = chunk.firstElementChild;
+      if (lenis) { lenis.resize(); lenis.scrollTo(target, { duration: 2.2 }); }
+      else target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
+
+  function buildCard(item, nextChunk) {
+    const card = el('div', 'card');
+    const question = item.label || item.ask;
+    card.appendChild(el('div', 'from', 'Thư hồi âm'));
+    if (item.ask) card.appendChild(el('h2', null, item.ask));
+    const status = el('div', 'status');
+    const buttons = [];
+
+    async function submit(answer) {
+      buttons.forEach(b => b.disabled = true);
+      status.textContent = 'Đang gửi cho anh…';
+      try {
+        await send(question, answer);
+        card.classList.add('done');
+        status.textContent = 'Anh nhận được rùi ♡';
+      } catch (e) {
+        status.textContent = 'Hông gửi được rùi, em ';
+        status.appendChild(mailtoLink(question, answer));
+      }
+      reveal(nextChunk);
+    }
+
+    if (item.options) {
+      const opts = el('div', 'opts');
+      item.options.forEach((label, i) => {
+        const b = el('button', i === 0 ? 'primary' : '', label);
+        b.type = 'button';
+        b.onclick = () => submit(label);
+        buttons.push(b);
+        opts.appendChild(b);
+      });
+      card.appendChild(opts);
+    } else {
+      const ta = el('textarea');
+      ta.placeholder = item.placeholder || '';
+      ta.setAttribute('data-lenis-prevent', '');
+      const b = el('button', 'primary', item.button || 'Gửi cho anh');
+      b.type = 'button';
+      b.disabled = true;
+      ta.oninput = () => { b.disabled = !ta.value.trim(); };
+      b.onclick = () => { ta.readOnly = true; submit(ta.value.trim()); };
+      buttons.push(b);
+      card.append(ta, b);
+      if (!item.final) {
+        const skip = el('button', 'skip', 'Đọc tiếp thui');
+        skip.type = 'button';
+        skip.onclick = () => {
+          buttons.forEach(x => x.disabled = true);
+          ta.readOnly = true;
+          reveal(nextChunk);
+        };
+        buttons.push(skip);
+        card.appendChild(skip);
+      }
+    }
+    card.appendChild(status);
+    return card;
+  }
+
+  // Chia thư thành các đoạn; đoạn sau chỉ hiện khi em đã trả lời hộp thoại trước đó.
+  const chunks = [el('div', 'chunk')];
+  const intro = el('div', 'intro');
+  intro.appendChild(el('h1', null, 'Gửi em'));
+  const hint = el('div', 'hint', 'Lướt xuống từ từ thui nha ');
+  hint.appendChild(el('span', null, '↓'));
+  intro.appendChild(hint);
+  chunks[0].appendChild(scene(intro, 0));
+
+  const pendingCards = [];
+  STORY.forEach((group, g) => group.items.forEach(item => {
+    const cur = chunks[chunks.length - 1];
+    if (typeof item === 'string') {
+      cur.appendChild(scene(el('p', 'line', item), g));
+    } else {
+      const s = scene(null, g, 'ask');
+      cur.appendChild(s);
+      const next = el('div', 'chunk');
+      next.hidden = true;
+      chunks.push(next);
+      pendingCards.push([s, item, next]);
+    }
+  }));
+
+  const outro = el('div', 'outro');
+  outro.appendChild(el('p', null, 'Anh iu em'));
+  outro.appendChild(el('small', null, '— Danh ♡'));
+  chunks[chunks.length - 1].appendChild(scene(outro, STORY.length - 1));
+
+  pendingCards.forEach(([s, item, next]) => s.appendChild(buildCard(item, next)));
+  chunks.forEach(c => story.appendChild(c));
+</script>
+
+<script type="importmap">
+  { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+  import * as THREE from 'three';
+
+  const scenes = [...document.querySelectorAll('.scene')];
+  const bar = document.getElementById('progress');
+  const root = document.documentElement.style;
+
+  // ---------- Hình dạng các cảnh (mỗi cảnh là một đám hạt sáng) ----------
+  const N = innerWidth < 700 ? 10000 : 18000;
+  const TAU = Math.PI * 2;
+  const rnd = (a = 1) => (Math.random() * 2 - 1) * a;
+
+  function make(fn) {
+    const pos = new Float32Array(N * 3), mix = new Float32Array(N);
+    for (let i = 0; i < N; i++) {
+      const p = fn(i);
+      pos[i * 3] = p[0]; pos[i * 3 + 1] = p[1]; pos[i * 3 + 2] = p[2]; mix[i] = p[3];
+    }
+    return { pos, mix };
+  }
+
+  // Một điểm trong khối trái tim phồng; trả về [x, y, z, khoảng cách tới viền 0..1].
+  function heartPoint(s) {
+    const edge = Math.random() < 0.4; // 40% hạt dồn về viền cho rõ nét
+    let x, y, depth;
+    do {
+      x = rnd(1.2); y = -1 + Math.random() * 2.3;
+      depth = -((x * x + y * y - 1) ** 3 - x * x * y ** 3); // > 0 là nằm trong tim
+    } while (depth < 0 || (edge && depth > 0.06));
+    const z = rnd() * Math.pow(depth, 0.3) * 0.45;
+    s *= 14;
+    return [x * s, (y - 0.1) * s, z * s, Math.min(1, Math.hypot(x, y) / 1.2)];
+  }
+
+  // Lấy mẫu điểm từ chữ / emoji vẽ lên canvas.
+  function fromCanvas(draw, w, h, worldW, depth, yOff = 0) {
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const g = c.getContext('2d');
+    g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    draw(g, w, h);
+    const d = g.getImageData(0, 0, w, h).data, px = [];
+    for (let y = 0; y < h; y += 2) for (let x = 0; x < w; x += 2) if (d[(y * w + x) * 4 + 3] > 128) px.push(x, y);
+    if (px.length < 400) return null;
+    const s = worldW / w;
+    return make(() => {
+      const k = (Math.random() * px.length / 2 | 0) * 2;
+      return [(px[k] - w / 2 + rnd()) * s, -(px[k + 1] - h / 2 + rnd()) * s + yOff, rnd(depth), px[k] / w];
+    });
+  }
+
+  await Promise.race([
+    Promise.all([
+      document.fonts.load('400 300px "Playfair Display"'),
+      document.fonts.load('italic 400 130px "Playfair Display"'),
+    ]),
+    new Promise(r => setTimeout(r, 2500)),
+  ]);
+
+  const SHAPES = {
+    heart: () => make(() => { const p = heartPoint(0.21); return [p[0], p[1], p[2], p[3] * 0.7 + Math.random() * 0.3]; }),
+
+    galaxy: () => make(i => {
+      const r = Math.pow(Math.random(), 1.4) * 7, a = (i % 3) / 3 * TAU + r * 0.9;
+      const j = () => Math.pow(Math.random(), 3) * (Math.random() < 0.5 ? 1 : -1) * 0.4 * (r + 0.5);
+      return [Math.cos(a) * r + j(), j() * 0.4, Math.sin(a) * r + j(), r / 7];
+    }),
+
+    vortex: () => make(i => {
+      const h = Math.random(), R = 0.25 + h * h * 5 + rnd(0.25), a = h * 14 + (i % 4) / 4 * TAU + rnd(0.3);
+      return [Math.cos(a) * R, (h - 0.5) * 10, Math.sin(a) * R, h];
+    }),
+
+    moon: () => make(i => {
+      if (i % 3 === 0) return [rnd(15), rnd(9), -6 + rnd(6), 0.85 + Math.random() * 0.15];
+      const u = rnd(), th = Math.random() * TAU, sq = Math.sqrt(1 - u * u), R = 3 * (1 + rnd(0.02));
+      const nx = sq * Math.cos(th), ny = u, nz = sq * Math.sin(th);
+      const lit = -0.7 * nx + 0.3 * ny + 0.65 * nz;
+      return [2.5 + R * nx, 1.2 + R * ny, R * nz, lit > 0 ? (1 - lit) * 0.25 : 0.6];
+    }),
+
+    question: () => fromCanvas((g, w, h) => {
+      g.font = '400 300px "Playfair Display", Georgia, serif';
+      g.fillText('?', w / 2, h / 2 + 10);
+    }, 300, 360, 6.5, 0.6),
+
+    sunrise: () => make(i => {
+      if (i % 9 < 4) {
+        const r = Math.sqrt(Math.random()) * 3.2, a = Math.random() * Math.PI;
+        return [Math.cos(a) * r, Math.sin(a) * r - 0.6, -3 + rnd(0.3), r / 3.2 * 0.3];
+      }
+      const x = rnd(15), z = -10 + Math.random() * 16;
+      return [x, -1 + 0.25 * Math.sin(x * 0.8 + z * 0.5), z, Math.abs(x) < 1.2 ? 0.2 : 0.6 + Math.random() * 0.4];
+    }),
+
+    broken: () => make(() => {
+      if (Math.random() < 0.08) return [rnd(5), -4 - Math.random() * 6, rnd(2), Math.random()];
+      const [x, y, z, r] = heartPoint(0.21);
+      const crack = 0.35 * Math.sin(y * 3) + 0.15 * Math.sin(y * 7);
+      const side = x < crack ? -1 : 1, a = side * -0.18;
+      return [x * Math.cos(a) - y * Math.sin(a) + side * 1.1, x * Math.sin(a) + y * Math.cos(a) - 0.4, z, side < 0 ? r * 0.5 : 0.5 + r * 0.5];
+    }),
+
+    sea: () => make(() => {
+      if (Math.random() < 0.12) return [rnd(14), Math.random() * 7, -10 + rnd(6), 1];
+      const x = rnd(16), z = -14 + Math.random() * 22;
+      const y = -1.6 + 0.5 * Math.sin(x * 0.45 + z * 0.2) * Math.cos(z * 0.35) + 0.2 * Math.sin(x * 1.4);
+      return [x, y, z, Math.min(1, (y + 2.3) / 1.4)];
+    }),
+
+    infinity: () => make(() => {
+      const t = Math.random() * TAU, d = 1 + Math.sin(t) ** 2;
+      const u = rnd(), th = Math.random() * TAU, rr = 0.35 * Math.cbrt(Math.random()), sq = Math.sqrt(1 - u * u);
+      return [5 * Math.cos(t) / d + rr * sq * Math.cos(th), 5 * Math.sin(t) * Math.cos(t) / d + rr * u, rr * sq * Math.sin(th), t / TAU];
+    }),
+
+    sorry: () => fromCanvas((g, w, h) => {
+      g.font = 'italic 400 130px "Playfair Display", Georgia, serif';
+      g.fillText('Chin lũi', w / 2, h / 2);
+    }, 640, 240, 10, 0.5, 3.4),
+
+    road: () => make(() => {
+      const q = Math.random();
+      if (q < 0.15) { const [x, y, z] = heartPoint(0.14); return [x + 3 * Math.sin(-36 * 0.12), y + 0.8, z - 36, 1]; }
+      const z = -36 + Math.random() * 44, cx = 3 * Math.sin(z * 0.12);
+      if (q < 0.27) { const zz = Math.floor(z) + Math.random() * 0.5; return [3 * Math.sin(zz * 0.12) + rnd(0.05), -2, zz, 0.9]; }
+      if (q < 0.47) return [cx + (Math.random() < 0.5 ? -1.4 : 1.4) + rnd(0.05), -2, z, 0.6];
+      return [cx + rnd(1.3), -2 + rnd(0.03), z, Math.random() * 0.2];
+    }),
+
+    ring: () => make(i => {
+      const k = i % 12, a = k / 12 * TAU, [x, y, z] = heartPoint(0.055);
+      return [Math.cos(a) * 4.6 + x, Math.sin(a) * 4.6 + y, z, k / 12];
+    }),
+
+    // Cuộn phim: đĩa có 6 lỗ + một dải phim có lỗ răng cưa chạy ra.
+    movie: () => make(i => {
+      if (i % 3 === 0) {
+        let u, v;
+        do { u = Math.random(); v = rnd(0.55); } while (Math.abs(v) > 0.38 && (u * 20) % 1 < 0.5);
+        const x = 1.2 + u * 7, y = -2 - u * 1.6;
+        return [x, y + v, rnd(0.08) + u * 1.5, u];
+      }
+      let x, y;
+      const holes = a => Math.hypot(x - Math.cos(a) * 1.7, y - 1 - Math.sin(a) * 1.7) < 0.7;
+      do { x = rnd(3); y = 1 + rnd(3); } while (
+        Math.hypot(x, y - 1) > 3 || Math.hypot(x, y - 1) < 0.35 ||
+        [0, 1, 2, 3, 4, 5].some(k => holes(k / 6 * TAU + 0.3)));
+      return [x - 1, y, rnd(0.25), Math.hypot(x, y - 1) / 3 * 0.5];
+    }),
+
+    final: () => make(i => {
+      if (i % 5 === 0) { const a = Math.random() * TAU, R = 6 + rnd(1.5); return [Math.cos(a) * R, Math.sin(a) * R * 0.75, rnd(2), 1]; }
+      const p = heartPoint(0.25); return [p[0], p[1], p[2], p[3] * 0.6];
+    }),
+  };
+
+  // Màu hạt (c1 → c2), nền, màu chữ phát sáng, góc camera của từng cảnh.
+  const THEMES = {
+    heart:    { c: ['#ff4f98', '#ffd6ea'], bg: ['#3a0b2e', '#0a0310'], glow: '#ff8fc8', pulse: 1 },
+    galaxy:   { c: ['#ffc7a8', '#6a5cff'], bg: ['#1c1240', '#05030f'], glow: '#b9a6ff', cam: [0, 6, 10] },
+    vortex:   { c: ['#ff4d6d', '#8a3ad1'], bg: ['#2a0a24', '#07020a'], glow: '#ff7a9a', cam: [0, 0, 14] },
+    moon:     { c: ['#fff3c4', '#5b7fe0'], bg: ['#0b1a3a', '#02040c'], glow: '#cfe0ff' },
+    question: { c: ['#9ad1ff', '#d2c0ff'], bg: ['#10223a', '#03060d'], glow: '#a8d4ff', bright: 0.6 },
+    sunrise:  { c: ['#ffcf7a', '#8a6bff'], bg: ['#4a1d3a', '#120818'], glow: '#ffc59a', cam: [0, 1, 12], look: [0, 0, -1] },
+    broken:   { c: ['#8f9cc0', '#ff7aa8'], bg: ['#151a2b', '#05060b'], glow: '#c3cbe6' },
+    sea:      { c: ['#5577c4', '#e4edff'], bg: ['#0d1626', '#020409'], glow: '#9fb7e0', cam: [0, 1.8, 9], look: [0, -1, -4] },
+    infinity: { c: ['#ffd27a', '#ff7ac6'], bg: ['#2b1430', '#07030b'], glow: '#ffc0de' },
+    sorry:    { c: ['#ff8fc8', '#ffffff'], bg: ['#33102b', '#09020a'], glow: '#ff9ecb', bright: 0.55 },
+    road:     { c: ['#ffe2a8', '#ff8fc8'], bg: ['#2d1a12', '#0a0505'], glow: '#ffd29a', cam: [0, 0.6, 9], look: [0, -1.2, -20] },
+    ring:     { c: ['#ff9ecb', '#ffe0a3'], bg: ['#3a1430', '#0b030c'], glow: '#ffb3d6' },
+    movie:    { c: ['#fff1b8', '#ff6b6b'], bg: ['#3a1010', '#0a0303'], glow: '#ffd27a', bright: 0.6 },
+    final:    { c: ['#ff2e6e', '#ffc2dc'], bg: ['#4a0a2a', '#0d0208'], glow: '#ff7ab0', pulse: 1 },
+  };
+
+  const themes = STORY.map(({ theme }) => {
+    const T = THEMES[theme];
+    const shape = SHAPES[theme]() || SHAPES.heart();
+    const c1 = new THREE.Color(T.c[0]), c2 = new THREE.Color(T.c[1]), c = new THREE.Color();
+    const col = new Float32Array(N * 3), b = T.bright || 1;
+    for (let i = 0; i < N; i++) {
+      c.copy(c1).lerp(c2, shape.mix[i]);
+      col[i * 3] = c.r * b; col[i * 3 + 1] = c.g * b; col[i * 3 + 2] = c.b * b;
+    }
+    return {
+      pos: shape.pos, col,
+      bg: T.bg.map(x => new THREE.Color(x)), glow: new THREE.Color(T.glow),
+      cam: new THREE.Vector3(...(T.cam || [0, 0, 13])), look: new THREE.Vector3(...(T.look || [0, 0, 0])),
+      pulse: T.pulse || 0,
+    };
+  });
+
+  // ---------- Three.js ----------
+  let renderer = null;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('world'), alpha: true, antialias: false });
+    renderer.setClearColor(0x000000, 0);
+  } catch (e) { /* không có WebGL thì vẫn đọc được thư, nền vẫn đổi màu */ }
+
+  const world = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 300);
+
+  function spriteTexture(drawShape) {
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const g = c.getContext('2d');
+    drawShape(g);
+    return new THREE.CanvasTexture(c);
+  }
+  const dotTex = spriteTexture(g => {
+    const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0, 'rgba(255,255,255,1)');
+    grad.addColorStop(0.25, 'rgba(255,255,255,.8)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = grad; g.fillRect(0, 0, 64, 64);
+  });
+  const heartTex = spriteTexture(g => {
+    g.translate(32, 30);
+    g.beginPath();
+    for (let t = 0; t <= TAU; t += 0.05) {
+      const x = 16 * Math.sin(t) ** 3, y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+      g.lineTo(x * 1.5, -y * 1.5);
+    }
+    g.shadowColor = '#fff'; g.shadowBlur = 10;
+    g.fillStyle = '#fff'; g.fill();
+  });
+
+  function pointsMat(map, size, opacity = 1) {
+    return new THREE.PointsMaterial({
+      size, map, opacity, transparent: true, vertexColors: false,
+      depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true,
+    });
+  }
+
+  // Đám hạt chính, biến hình giữa các cảnh.
+  const posArr = new Float32Array(N * 3), colArr = new Float32Array(N * 3), jitter = new Float32Array(N * 3);
+  for (let i = 0; i < N * 3; i++) jitter[i] = rnd();
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colArr, 3));
+  const mainMat = pointsMat(dotTex, 0.065);
+  mainMat.vertexColors = true;
+  const particles = new THREE.Points(geo, mainMat);
+  world.add(particles);
+
+  // Sao nền rất xa.
+  function cloud(count, place) {
+    const g = new THREE.BufferGeometry(), p = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) place(p, i * 3);
+    g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+    return g;
+  }
+  const stars = new THREE.Points(cloud(3000, (p, k) => {
+    const r = 60 + Math.random() * 80, t = Math.random() * TAU, u = rnd(), sq = Math.sqrt(1 - u * u);
+    p[k] = r * sq * Math.cos(t); p[k + 1] = r * u; p[k + 2] = r * sq * Math.sin(t);
+  }), pointsMat(dotTex, 0.45, 0.8));
+  world.add(stars);
+
+  // Hai lớp trái tim bay lơ lửng, trôi theo nhịp cuộn với tốc độ khác nhau (thị sai).
+  function heartLayer(count, zMin, zMax, size, speed) {
+    const g = cloud(count, (p, k) => { p[k] = rnd(16); p[k + 1] = rnd(11); p[k + 2] = zMin + Math.random() * (zMax - zMin); });
+    const base = g.attributes.position.array.slice();
+    const pts = new THREE.Points(g, pointsMat(heartTex, size, 0.75));
+    pts.userData = { base, speed };
+    camera.add(pts);
+    return pts;
+  }
+  const hearts = [heartLayer(70, -22, -14, 0.9, 0.9), heartLayer(35, -9, -5, 0.45, 2.2)];
+  world.add(camera);
+
+  function resize() {
+    if (!renderer) return;
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight, false);
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+  }
+  addEventListener('resize', resize);
+  resize();
+
+  const mouse = { x: 0, y: 0, sx: 0, sy: 0 };
+  addEventListener('pointermove', e => {
+    mouse.x = e.clientX / innerWidth - 0.5;
+    mouse.y = e.clientY / innerHeight - 0.5;
+  });
+
+  // ---------- Cuộn ----------
+  let sPos = 0, themeTarget = 0;
+
+  // Chữ lăn trên một mặt cong: câu giữa màn hình rõ nét, câu xa thì nghiêng, mờ, trôi chậm hơn.
+  function updateScenes() {
+    const vh = innerHeight;
+    let best = Infinity, bestIdx = 0, bestD = 0;
+    scenes.forEach((s, i) => {
+      if (s.parentElement.hidden) return;
+      const r = s.getBoundingClientRect();
+      const d = (r.top + r.height / 2 - vh / 2) / vh;
+      const a = Math.abs(d);
+      if (a < best) { best = a; bestIdx = i; bestD = d; }
+      if (a > 1.6) return;
+      const inner = s.firstElementChild;
+      inner.style.opacity = Math.max(0, 1 - a * 1.5).toFixed(3);
+      if (s.classList.contains('ask')) return; // giữ hộp thoại đứng yên để dễ gõ
+      inner.style.transform = `translate3d(0, ${(-d * vh * 0.25).toFixed(1)}px, 0) rotateX(${(-d * 22).toFixed(2)}deg) scale(${(1 - a * 0.08).toFixed(3)})`;
+      inner.style.filter = `blur(${(a * 6).toFixed(1)}px)`;
+    });
+    sPos = Math.max(0, bestIdx - bestD);
+    const i0 = Math.floor(sPos);
+    let i1 = Math.min(scenes.length - 1, i0 + 1);
+    if (scenes[i1].parentElement.hidden) i1 = i0;
+    const g0 = +scenes[i0].dataset.g, g1 = +scenes[i1].dataset.g;
+    themeTarget = g0 + (g1 - g0) * (sPos - i0);
+    bar.style.width = (sPos / (scenes.length - 1) * 100).toFixed(2) + '%';
+  }
+
+  // ---------- Vòng lặp ----------
+  const smooth = x => x * x * (3 - 2 * x);
+  const tmpA = new THREE.Color(), tmpB = new THREE.Color(), glow = new THREE.Color();
+  const camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
+  let themeV = null, colorV = -1, lastBg = '';
+  const clock = new THREE.Clock();
+
+  function frame() {
+    const t = clock.getElapsedTime();
+    updateScenes();
+    themeV = themeV === null ? themeTarget : themeV + (themeTarget - themeV) * 0.035;
+    mouse.sx += (mouse.x - mouse.sx) * 0.05;
+    mouse.sy += (mouse.y - mouse.sy) * 0.05;
+
+    const i0 = Math.min(themes.length - 1, Math.floor(themeV)), i1 = Math.min(themes.length - 1, i0 + 1);
+    const f = smooth(themeV - i0), A = themes[i0], B = themes[i1];
+
+    // Nền + màu chữ của cảnh.
+    tmpA.copy(A.bg[0]).lerp(B.bg[0], f); tmpB.copy(A.bg[1]).lerp(B.bg[1], f);
+    glow.copy(A.glow).lerp(B.glow, f);
+    const bg = `radial-gradient(ellipse at 50% 35%, #${tmpA.getHexString()} 0%, #${tmpB.getHexString()} 75%)`;
+    if (bg !== lastBg) {
+      document.body.style.background = bg;
+      document.body.style.backgroundAttachment = 'fixed';
+      root.setProperty('--glow', '#' + glow.getHexString());
+      lastBg = bg;
+    }
+
+    if (renderer) {
+      // Hạt tan ra rồi ghép lại thành hình cảnh mới; lúc đứng yên thì khẽ lung linh.
+      const burst = Math.sin(f * Math.PI) * 2.4;
+      const pa = A.pos, pb = B.pos;
+      for (let i = 0; i < N * 3; i++) {
+        const w = burst + 0.05 * Math.sin(t * 1.5 + i);
+        posArr[i] = pa[i] + (pb[i] - pa[i]) * f + jitter[i] * w;
+      }
+      geo.attributes.position.needsUpdate = true;
+      if (Math.abs(themeV - colorV) > 0.0005) {
+        const ca = A.col, cb = B.col;
+        for (let i = 0; i < N * 3; i++) colArr[i] = ca[i] + (cb[i] - ca[i]) * f;
+        geo.attributes.color.needsUpdate = true;
+        colorV = themeV;
+      }
+
+      const pulse = A.pulse + (B.pulse - A.pulse) * f;
+      particles.scale.setScalar(1 + pulse * 0.05 * Math.pow(Math.max(0, Math.sin(t * 2.6)), 12));
+      particles.rotation.y = Math.sin(sPos * 0.35) * 0.18 + mouse.sx * 0.3;
+
+      // Camera trôi êm theo nhịp cuộn; màn hình dọc thì lùi xa hơn cho vừa hình.
+      camPos.copy(A.cam).lerp(B.cam, f);
+      camLook.copy(A.look).lerp(B.look, f);
+      const k = camera.aspect < 1 ? Math.min(1.8, 0.8 / camera.aspect) : 1;
+      camPos.sub(camLook).multiplyScalar(k).add(camLook);
+      camPos.x += Math.sin(sPos * 0.5) * 0.8 + mouse.sx * 1.5;
+      camPos.y += Math.cos(sPos * 0.4) * 0.4 - mouse.sy;
+      camera.position.copy(camPos);
+      camera.lookAt(camLook);
+
+      stars.rotation.x = sPos * 0.02;
+      stars.rotation.y = t * 0.004;
+      hearts.forEach(h => {
+        const p = h.geometry.attributes.position.array, { base, speed } = h.userData;
+        const off = sPos * speed + t * 0.25;
+        for (let k3 = 1; k3 < p.length; k3 += 3) p[k3] = ((base[k3] + off + 11) % 22 + 22) % 22 - 11;
+        h.geometry.attributes.position.needsUpdate = true;
+        h.material.color.copy(glow);
+      });
+
+      renderer.render(world, camera);
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+</script>
+</body>
+</html>
