@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gửi em</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💌</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;600&family=Dancing+Script:wght@600&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
@@ -56,8 +57,8 @@
     text-shadow: 0 0 26px var(--glow), 0 2px 4px rgba(0, 0, 0, .9), 0 0 40px rgba(0, 0, 0, .9);
   }
 
-  .intro, .outro { text-align: center; }
-  .intro h1, .outro p {
+  .intro { text-align: center; }
+  .intro h1, .g-title p, .g-final p {
     margin: 0;
     font-family: 'Dancing Script', cursive; font-weight: 600;
     font-size: clamp(3.8rem, 13vw, 7.5rem);
@@ -67,7 +68,21 @@
   .hint { margin-top: 18px; color: var(--muted); font-size: .95rem; letter-spacing: .04em; }
   .hint span { display: inline-block; animation: bob 1.8s ease-in-out infinite; }
   @keyframes bob { 50% { transform: translateY(6px); } }
-  .outro small { display: block; margin-top: 12px; color: var(--muted); font-size: 1rem; }
+  .g-final small { display: block; margin-top: 12px; color: var(--muted); font-size: 1rem; }
+  .open {
+    margin-top: 26px; padding: 14px 34px; border: 0; border-radius: 999px; cursor: pointer;
+    font: inherit; font-weight: 600; font-size: 1.05rem;
+    background: var(--glow); color: #1b0b22; box-shadow: 0 8px 30px -6px var(--glow);
+    transition: transform .2s;
+  }
+  .open:hover { transform: translateY(-2px) scale(1.03); }
+  #mute {
+    position: fixed; top: 14px; right: 14px; z-index: 11;
+    width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
+    border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 1.1rem;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  }
+  #mute[hidden] { display: none; }
 
   .card {
     width: 100%; max-width: 460px; box-sizing: border-box;
@@ -116,6 +131,61 @@
   .card .status a { color: var(--glow); }
   .card.done .status { color: var(--glow); }
 
+  /* ---------- Trình chiếu ảnh theo nhạc ---------- */
+  .scene.gallery { padding: 0; overflow: hidden; }
+  .stage { position: relative; width: 100%; height: 100vh; height: 100svh; perspective: 1200px; }
+  .ph {
+    position: absolute; left: 50%; top: 50%; z-index: 1; opacity: 0;
+    width: min(78vw, 100vh);
+    transition: transform 1.4s cubic-bezier(.2, .8, .2, 1), opacity 1s, filter 1s;
+  }
+  .ph.strip { width: auto; height: 78vh; aspect-ratio: 1 / 3; transition-duration: 2.6s, 1s, 1s; }
+  .ph.current { z-index: 5; }
+  .ph .beat {
+    height: 100%; box-sizing: border-box;
+    padding: 10px 10px 34px; border-radius: 6px; background: #fff;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, .5);
+  }
+  .ph.strip .beat { padding: 0; background: none; }
+  .ph .pic { height: 100%; overflow: hidden; }
+  .ph img { display: block; width: 100%; height: auto; }
+  .ph.strip img { height: 100%; object-fit: cover; }
+  .ph.current img { animation: kenburns 7s ease-out forwards; }
+  @keyframes kenburns { to { transform: scale(1.08); } }
+  @media (orientation: portrait) {
+    .ph { width: 88vw; }
+    .ph.strip { height: 70vh; }
+  }
+  .g-title, .g-final {
+    position: absolute; inset: 0; z-index: 6; pointer-events: none;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; transition: opacity 1.2s;
+  }
+  .g-title p, .g-final p { font-size: clamp(2.6rem, 9vw, 5.5rem); }
+  .g-title.gone, .g-final:not(.show) { opacity: 0; }
+  .spark {
+    position: absolute; z-index: 7; pointer-events: none;
+    color: var(--glow); text-shadow: 0 0 12px var(--glow);
+    animation: spark 1.6s ease-out forwards;
+  }
+  @keyframes spark {
+    from { transform: translate(-50%, -50%) scale(.4); opacity: 1; }
+    to { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.3); opacity: 0; }
+  }
+
+  .video-wrap { position: relative; max-width: min(92vw, 1000px); }
+  .video-wrap video {
+    display: block; max-width: 100%; max-height: 82vh; max-height: 82svh;
+    border-radius: 18px; background: #000;
+    box-shadow: 0 0 60px -10px var(--glow), 0 20px 60px rgba(0, 0, 0, .6);
+  }
+  .play-overlay {
+    position: absolute; inset: 0; margin: auto; width: fit-content; height: fit-content;
+    padding: 14px 30px; border: 0; border-radius: 999px; cursor: pointer;
+    font: inherit; font-weight: 600; background: var(--glow); color: #1b0b22;
+  }
+  .play-overlay[hidden] { display: none; }
+
   @media (prefers-reduced-motion: reduce) {
     .hint span { animation: none; }
   }
@@ -125,70 +195,71 @@
 <canvas id="world"></canvas>
 <div class="vignette"></div>
 <div id="progress"></div>
+<button id="mute" type="button" hidden aria-label="Tắt / bật nhạc">♪</button>
 <main id="story"></main>
 
 <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
 <script>
   // Mỗi nhóm là một cảnh nền (theme); mỗi chuỗi là một câu (một màn hình); object có `ask` là hộp thoại hồi âm.
   const STORY = [
-    { theme: 'heart', items: [
+    { theme: 'heart', music: '1', items: [
       'Anh muốn gửi đôi lời chin lũi chân thành nhất đến em',
       { ask: 'Em có muốn đọc tiếp hăm?', options: ['Có', 'Hăm'] },
     ] },
-    { theme: 'galaxy', items: [
+    { theme: 'galaxy', music: '1', items: [
       'Anh nhớ em',
       'Anh chin lũi',
       'Anh đã rất nhớ em',
     ] },
-    { theme: 'vortex', items: [
+    { theme: 'vortex', music: '2', items: [
       'Anh tự dằn vặt bản thân mình, những hành động của mình',
       'Anh chin lũi em',
       'Em gọi anh là Danh ác quỷ, hay Danh bái thiến gì cũm được',
       'Anh xin nhận, nhận hết lỗi lầm cụa mình',
       { ask: 'Em biết hăm?', options: ['Cóa', 'Hăm'] },
     ] },
-    { theme: 'moon', items: [
+    { theme: 'moon', music: '2', items: [
       'Đêm qua là một đêm dài của cuộc đời anh',
       'Anh chẳng thể ngủ được',
       'Anh hối hận vì những hành động cụa mình lắm',
       'Anh bùn bản thân mình lắm, sao mà anh chẳng thể giữ được sự điềm tĩnh mà làm những hành động như thế',
       'Anh buồn sầu lắm',
     ] },
-    { theme: 'question', items: [
+    { theme: 'question', music: '2', items: [
       'Lúc đó, anh chỉ mong nhận được sự hồi đáp từ em, anh hông biết em đã đi dou',
       { ask: 'Em đã đi dou?', input: true, placeholder: 'Em kể anh nghe nha…' },
     ] },
-    { theme: 'sunrise', items: [
+    { theme: 'sunrise', music: '3', items: [
       'Đến sáng dậy mới là lúc anh cảm thấy con tim mình lạc lõng nhất',
       'Anh đã nghĩ rất nhìu',
       'Anh đến bên em, mà để em phải bùn hết lần này đến lần khác',
     ] },
-    { theme: 'broken', items: [
+    { theme: 'broken', music: '3', items: [
       'Để con tim bé bỏng, mong manh dễ vỡ, cô nàng đang iu như em phải thất vọng mỗi khi anh làm lỗi',
       'Những lúc anh hông giữ được sự điềm tĩnh như này, anh chỉ mún chui xún đất thui',
       'Anh chẳng còn mặt mũi vào để nhìn em nựa, huhu',
       'Cũm chẳng còn can đảm nào để cầu xin em tha thứ',
     ] },
-    { theme: 'sea', items: [
+    { theme: 'sea', music: '3', items: [
       'Anh như gục ngã, chẳng còn sức sống, chỉ mún nằm dài cả ngày ở nhà để tự dằn vặt về những hành động hoá thú cụa mình hic',
       'Anh chin lũi, đã có những hành động làm em thấy anh thiếu tôn trọng em',
       'Nhưng mà, anh chưa bao giờ xem em là dễ dãi',
       'Huhu, cũng do tại anh hoá thú mà thui, anh mún chui xún đất',
     ] },
-    { theme: 'infinity', items: [
+    { theme: 'infinity', music: '3.1', items: [
       'Anh đã hứa sẽ hông rời xa em, hông bỏ em giữa chợ, mà sao giờ đây anh lại là người trực tiếp gây ra điều này đây',
       'Anh chẳng còn mặt mũi nào để gặp em huhu, anh khiến em nghĩ anh là người hong tốt',
       'Mà cũm đúng thui, anh đã hong tốt với em',
       'Làm gì có người tốt nào lại nỡ xem người mình yêu nhất là món chính chứ',
     ] },
-    { theme: 'sorry', items: [
+    { theme: 'sorry', music: '3.1', items: [
       'Anh chin lũi, thật sự anh rất chin lũi',
       'Anh đã sai rùi',
       'Lúc đó phần con đã quá lấn át phần người trong con người anh, nên anh đã thể giữ được chính mình, mà làm vị với em, anh hối hận lắm',
       'Em chửi anh i, em mắng anh i, anh sẽ đọc để nghiền ngẫm những lỗi lầm mình đã gây ra',
       { ask: '', label: 'Em chửi anh i, em mắng anh i', input: true, placeholder: 'Em mắng anh ở đây nè…' },
     ] },
-    { theme: 'road', items: [
+    { theme: 'road', music: '4', items: [
       'Anh cảm ơn em',
       'Cảm ơn em vì đã lặn lội 15 km để đến ăn cơm cùng anh',
       'Anh đã quó vô tâm khi hong cảm ơn em',
@@ -196,17 +267,17 @@
       'Người con gái mình yêu nhất đến để ăn cơm cùng mình, mà anh lại hong trân trọng điều đó',
       'Anh lại đi làm những chuyện như vậy huhu',
     ] },
-    { theme: 'ring', items: [
+    { theme: 'ring', music: '4', items: [
       'Anh hứa sẽ hong thế nựa, lần sau anh sẽ hỏi ý kiến em trước òi mới dám làm huhu',
       { ask: 'Được hăm em?', label: 'Lần sau anh hỏi ý kiến em trước — Được hăm em?', options: ['Có', 'Hăm'] },
     ] },
-    { theme: 'movie', items: [
+    { theme: 'movie', music: '4', items: [
       'Còn một thứ nựa',
       'Về bộ phim mà em rủ anh xem hic',
       'Nào mình i xem được hăm?',
       { ask: 'Được hăm em?', label: 'Nào mình i xem phim được hăm?', options: ['Có', 'Hăm'] },
     ] },
-    { theme: 'final', items: [
+    { theme: 'final', music: '4', items: [
       { ask: 'Đôi lời cuối cùng em mún nhắn nhủ đến anh là gì?', input: true, button: 'Nhắn cho anh', final: true, placeholder: 'Em viết gì cũm được…' },
     ] },
   ];
@@ -260,6 +331,7 @@
   function reveal(chunk) {
     if (!chunk) return;
     chunk.hidden = false;
+    if (chunk.querySelector('.card.final')) preloadGallery();
     requestAnimationFrame(() => {
       const target = chunk.firstElementChild;
       if (lenis) { lenis.resize(); lenis.scrollTo(target, { duration: 2.2 }); }
@@ -268,7 +340,7 @@
   }
 
   function buildCard(item, nextChunk) {
-    const card = el('div', 'card');
+    const card = el('div', 'card' + (item.final ? ' final' : ''));
     const question = item.label || item.ask;
     card.appendChild(el('div', 'from', 'Thư hồi âm'));
     if (item.ask) card.appendChild(el('h2', null, item.ask));
@@ -330,9 +402,11 @@
   const chunks = [el('div', 'chunk')];
   const intro = el('div', 'intro');
   intro.appendChild(el('h1', null, 'Gửi em'));
-  const hint = el('div', 'hint', 'Lướt xuống từ từ thui nha ');
+  const openBtn = el('button', 'open', 'Mở thư ♡');
+  openBtn.type = 'button';
+  const hint = el('div', 'hint', 'Bật tiếng lên, rùi lướt xuống từ từ thui nha ');
   hint.appendChild(el('span', null, '↓'));
-  intro.appendChild(hint);
+  intro.append(openBtn, hint);
   chunks[0].appendChild(scene(intro, 0));
 
   const pendingCards = [];
@@ -350,13 +424,289 @@
     }
   }));
 
-  const outro = el('div', 'outro');
-  outro.appendChild(el('p', null, 'Anh iu em'));
-  outro.appendChild(el('small', null, '— Danh ♡'));
-  chunks[chunks.length - 1].appendChild(scene(outro, STORY.length - 1));
+  // ---------- Phần cuối: trình chiếu ảnh theo nhạc 5, rồi tới video ----------
+  const LAST = STORY.length - 1;
+  const PHOTOS = [
+    'photos/01.jpg', 'photos/02.jpg', 'photos/03.jpg', 'photos/04.jpg', { strip: 'photos/05.jpg' },
+    'photos/06.jpg', 'photos/07.jpg', 'photos/08.jpg', 'photos/09.jpg', { strip: 'photos/10.jpg' },
+  ];
+  // Mốc thời gian (giây) theo bản nhạc 5 dài 59.5s; tự co giãn theo độ dài thật của bài.
+  const BASE = 59.5, TIMES = [2.2, 7.2, 12.2, 17.2, 22.2, 28.5, 33.5, 38.5, 43.5, 48.5], FINALE = 54;
+
+  const stage = el('div', 'stage');
+  const gTitle = el('div', 'g-title');
+  gTitle.append(el('p', null, 'Những khoảnh khắc của mình'));
+  const gFinal = el('div', 'g-final');
+  gFinal.append(el('p', null, 'Anh iu em'), el('small', null, '— Danh ♡'));
+  stage.append(gTitle, gFinal);
+  const photoEls = PHOTOS.map(p => {
+    const ph = el('div', 'ph' + (p.strip ? ' strip' : ''));
+    const beat = el('div', 'beat'), pic = el('div', 'pic'), img = el('img');
+    img.alt = '';
+    img.dataset.src = p.strip || p;
+    pic.appendChild(img); beat.appendChild(pic); ph.appendChild(beat);
+    stage.appendChild(ph);
+    return ph;
+  });
+  chunks[chunks.length - 1].appendChild(scene(stage, LAST, 'gallery'));
+
+  const videoChunk = el('div', 'chunk');
+  videoChunk.hidden = true;
+  const vWrap = el('div', 'video-wrap');
+  const video = el('video');
+  video.src = 'imageandvideo/1793432233390_2215153853739103161_3431037437363282585.mp4';
+  video.poster = 'photos/08.jpg';
+  video.controls = true; video.playsInline = true; video.preload = 'none';
+  const playOverlay = el('button', 'play-overlay', '▶ Bấm để xem video nha');
+  playOverlay.type = 'button';
+  playOverlay.hidden = true;
+  playOverlay.onclick = () => { playOverlay.hidden = true; video.play(); };
+  video.addEventListener('play', () => { playOverlay.hidden = true; });
+  vWrap.append(video, playOverlay);
+  videoChunk.appendChild(scene(vWrap, LAST, 'video'));
+  chunks.push(videoChunk);
 
   pendingCards.forEach(([s, item, next]) => s.appendChild(buildCard(item, next)));
   chunks.forEach(c => story.appendChild(c));
+
+  function preloadGallery() {
+    photoEls.forEach(ph => { const img = ph.querySelector('img'); if (!img.src) img.src = img.dataset.src; });
+  }
+
+  // ---------- Nhạc ----------
+  // Mỗi đoạn thư phát bài ghi trong STORY[g].music, chuyển bài thì nhạc mờ dần sang nhau; bài 5 dành cho phần ảnh.
+  const TRACKS = ['1', '2', '3', '3.1', '4', '5'];
+  const GALLERY_TRACK = TRACKS.indexOf('5');
+  const chans = TRACKS.map((name, i) => {
+    const a = new Audio('music/' + name + '.mp3');
+    a.loop = i !== GALLERY_TRACK;
+    a.preload = i === 0 ? 'auto' : 'metadata';
+    return { el: a, gain: null, stop: 0 };
+  });
+  const muteBtn = document.getElementById('mute');
+  let actx = null, master = null, analyser = null, fbuf = null;
+  let unlocked = false, active = -1, muted = false, currentScene = null;
+
+  // Trình duyệt chỉ cho phát nhạc sau một lần chạm/bấm của người xem.
+  function unlock() {
+    if (unlocked) return;
+    unlocked = true;
+    try {
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      master = actx.createGain();
+      analyser = actx.createAnalyser();
+      analyser.fftSize = 512;
+      fbuf = new Uint8Array(analyser.frequencyBinCount);
+      master.connect(analyser);
+      master.connect(actx.destination);
+      chans.forEach(c => {
+        c.gain = actx.createGain();
+        c.gain.gain.value = 0;
+        actx.createMediaElementSource(c.el).connect(c.gain).connect(master);
+      });
+      actx.resume();
+    } catch (e) { actx = null; }
+    // Mồi play/pause cả loạt trong lúc đang có thao tác, để iOS cho phép đổi bài về sau.
+    chans.forEach((c, i) => {
+      if (!actx) c.el.volume = 0;
+      c.el.play().then(() => { if (i !== active) c.el.pause(); }).catch(() => {});
+    });
+    muteBtn.hidden = false;
+    if (currentScene) onScene(currentScene);
+  }
+  ['pointerup', 'touchend', 'keydown'].forEach(ev => addEventListener(ev, unlock, { passive: true }));
+
+  function playTrack(i) {
+    if (i === active) return;
+    active = i;
+    chans.forEach((c, j) => {
+      const on = j === i;
+      clearTimeout(c.stop);
+      if (on) {
+        if (j === GALLERY_TRACK) c.el.currentTime = 0;
+        c.el.play().catch(() => { if (j === GALLERY_TRACK) gallery.useTimer = true; });
+      } else {
+        c.stop = setTimeout(() => c.el.pause(), 1600);
+      }
+      if (actx) {
+        const g = c.gain.gain, now = actx.currentTime;
+        g.cancelScheduledValues(now);
+        g.setValueAtTime(g.value, now);
+        g.linearRampToValueAtTime(on ? 1 : 0, now + 1.5);
+      } else {
+        c.el.volume = on ? 1 : 0;
+      }
+    });
+  }
+
+  muteBtn.onclick = () => {
+    muted = !muted;
+    muteBtn.textContent = muted ? '🔇' : '♪';
+    if (master) master.gain.value = muted ? 0 : 1;
+    else chans.forEach(c => c.el.muted = muted);
+  };
+
+  openBtn.onclick = () => {
+    unlock();
+    const next = chunks[0].children[1];
+    if (lenis) lenis.scrollTo(next, { duration: 2.2 });
+    else next.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Được nền 3D gọi mỗi khi câu ở giữa màn hình đổi sang câu khác.
+  function onScene(s) {
+    currentScene = s;
+    if (!unlocked) return;
+    const isVideo = s.classList.contains('video');
+    if (!isVideo && !video.paused) video.pause();
+    if (s.classList.contains('gallery') && !gallery.started) return startGallery();
+    if (gallery.running) return;
+    if (isVideo) {
+      playTrack(-1);
+      video.play().catch(() => { playOverlay.hidden = false; });
+      return;
+    }
+    if (s.classList.contains('gallery')) return playTrack(-1);
+    playTrack(TRACKS.indexOf(STORY[+s.dataset.g].music));
+  }
+
+  // Đo nhịp bass của nhạc đang phát; nền 3D và ảnh nảy theo window.musicKick / musicLevel.
+  let avgEnergy = 0, lastKick = 0;
+  window.musicKick = 0; window.musicLevel = 0;
+  function analyse(now) {
+    if (!analyser) return false;
+    analyser.getByteFrequencyData(fbuf);
+    let e = 0;
+    for (let i = 1; i <= 4; i++) e += fbuf[i];
+    e /= 4 * 255;
+    avgEnergy = avgEnergy * 0.95 + e * 0.05;
+    window.musicLevel += (e - window.musicLevel) * 0.2;
+    window.musicKick *= 0.9;
+    if (e > avgEnergy * 1.15 && e > 0.35 && now - lastKick > 280) {
+      lastKick = now;
+      window.musicKick = 1;
+      return true;
+    }
+    return false;
+  }
+
+  // ---------- Trình chiếu ----------
+  const gallery = { started: false, running: false, useTimer: false, t0: 0, shown: 0, finale: false };
+  const galleryAudio = chans[GALLERY_TRACK].el;
+  const rand = (a = 1) => (Math.random() * 2 - 1) * a;
+
+  function place(ph, { x = 0, y = 0, r = 0, ry = 0, s = 1, o = 1, blur = 0 }) {
+    ph.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${r}deg) rotateY(${ry}deg) scale(${s})`;
+    ph.style.opacity = o;
+    ph.style.filter = blur ? `blur(${blur}px)` : '';
+  }
+
+  // Mỗi ảnh ngang vào sân khấu một kiểu: phóng to mờ dần, rơi từ trên xuống, lật, xoay tròn.
+  const ENTRIES = [
+    () => ({ s: 1.6, o: 0, blur: 14 }),
+    () => ({ y: -innerHeight * 1.1, r: -25 }),
+    () => ({ ry: 90, o: 0 }),
+    () => ({ r: 200, s: 0.2, o: 0 }),
+  ];
+
+  function pilePos(k) {
+    const W = innerWidth, H = innerHeight, side = k % 2 ? 1 : -1, row = Math.floor(k / 2);
+    if (W < H) return { x: (-0.36 + row * 0.18) * W, y: side * H * 0.38, r: side * (6 + row * 3), s: 0.28 };
+    return { x: side * W * (0.34 + (row % 2) * 0.05), y: (-0.32 + row * 0.16) * H, r: side * (6 + row * 3), s: 0.3 };
+  }
+
+  function show(k) {
+    const ph = photoEls[k];
+    const from = ph.classList.contains('strip') ? { y: -innerHeight * 1.2 } : ENTRIES[k % ENTRIES.length]();
+    ph.style.transition = 'none';
+    place(ph, from);
+    ph.offsetWidth; // áp vị trí xuất phát trước khi bật lại transition
+    ph.style.transition = '';
+    ph.classList.add('current');
+    place(ph, { r: rand(3) });
+    if (k > 0) toPile(k - 1);
+  }
+
+  function toPile(k) {
+    const ph = photoEls[k];
+    ph.classList.remove('current');
+    ph.querySelector('.beat').style.transform = '';
+    place(ph, { ...pilePos(k), o: 0.6 });
+  }
+
+  // Kết: mọi tấm ảnh bay về xếp thành hình trái tim quanh dòng "Anh iu em".
+  function showFinale() {
+    gallery.finale = true;
+    const n = photoEls.length, R = Math.min(innerWidth, innerHeight) * 0.46 / 17;
+    photoEls.forEach((ph, k) => {
+      const t = (k + 0.5) / n * Math.PI * 2;
+      const x = 16 * Math.sin(t) ** 3 * R;
+      const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * R;
+      ph.classList.remove('current');
+      ph.querySelector('.beat').style.transform = '';
+      ph.style.transitionDelay = k * 0.08 + 's';
+      place(ph, { x, y, r: rand(8), s: ph.classList.contains('strip') ? 0.12 : 0.16 });
+    });
+    gFinal.classList.add('show');
+  }
+
+  function sparkle() {
+    for (let i = 0; i < 4; i++) {
+      const h = el('span', 'spark', '♥');
+      const a = Math.random() * Math.PI * 2, d = 120 + Math.random() * 160;
+      h.style.left = 50 + rand(18) + '%';
+      h.style.top = 50 + rand(18) + '%';
+      h.style.fontSize = 14 + Math.random() * 18 + 'px';
+      h.style.setProperty('--dx', Math.cos(a) * d + 'px');
+      h.style.setProperty('--dy', Math.sin(a) * d + 'px');
+      stage.appendChild(h);
+      setTimeout(() => h.remove(), 1700);
+    }
+  }
+
+  function galleryTime() {
+    return gallery.useTimer ? (performance.now() - gallery.t0) / 1000 : galleryAudio.currentTime;
+  }
+
+  function startGallery() {
+    preloadGallery();
+    Object.assign(gallery, { started: true, running: true, t0: performance.now() });
+    playTrack(GALLERY_TRACK);
+    video.preload = 'auto';
+  }
+
+  function endGallery() {
+    if (!gallery.running) return;
+    gallery.running = false;
+    if (!gallery.finale) showFinale();
+    setTimeout(() => reveal(videoChunk), 2500);
+  }
+  galleryAudio.addEventListener('ended', endGallery);
+
+  // Ảnh mới đổi đúng vào một nhịp bass gần mốc thời gian của nó (lệch tối đa ~0.5s).
+  function galleryTick(hit) {
+    const t = galleryTime(), k = (galleryAudio.duration || BASE) / BASE;
+    if (t > TIMES[0] * k - 0.5) gTitle.classList.add('gone');
+    if (gallery.shown < photoEls.length) {
+      const T = TIMES[gallery.shown] * k;
+      if (t >= T + 0.5 || (hit && t >= T - 0.4)) show(gallery.shown++);
+    } else if (!gallery.finale && (t >= FINALE * k + 0.5 || (hit && t >= FINALE * k - 0.4))) {
+      showFinale();
+    }
+    const cur = stage.querySelector('.ph.current .beat');
+    if (cur) {
+      cur.style.transform = `scale(${1 + window.musicKick * 0.035})`;
+      cur.style.boxShadow = `0 20px 50px rgba(0,0,0,.5), 0 0 ${20 + window.musicLevel * 90}px var(--glow)`;
+    }
+    if (hit) sparkle();
+    if (gallery.useTimer && t >= BASE) endGallery();
+  }
+
+  requestAnimationFrame(function audioLoop(now) {
+    const hit = analyse(now);
+    if (gallery.running) galleryTick(hit);
+    requestAnimationFrame(audioLoop);
+  });
 </script>
 
 <script type="importmap">
@@ -649,7 +999,7 @@
   });
 
   // ---------- Cuộn ----------
-  let sPos = 0, themeTarget = 0;
+  let sPos = 0, themeTarget = 0, lastBest = -1;
 
   // Chữ lăn trên một mặt cong: câu giữa màn hình rõ nét, câu xa thì nghiêng, mờ, trôi chậm hơn.
   function updateScenes() {
@@ -664,10 +1014,11 @@
       if (a > 1.6) return;
       const inner = s.firstElementChild;
       inner.style.opacity = Math.max(0, 1 - a * 1.5).toFixed(3);
-      if (s.classList.contains('ask')) return; // giữ hộp thoại đứng yên để dễ gõ
+      if (s.matches('.ask, .gallery, .video')) return; // giữ hộp thoại, ảnh, video đứng yên
       inner.style.transform = `translate3d(0, ${(-d * vh * 0.25).toFixed(1)}px, 0) rotateX(${(-d * 22).toFixed(2)}deg) scale(${(1 - a * 0.08).toFixed(3)})`;
       inner.style.filter = `blur(${(a * 6).toFixed(1)}px)`;
     });
+    if (bestIdx !== lastBest) { lastBest = bestIdx; onScene(scenes[bestIdx]); }
     sPos = Math.max(0, bestIdx - bestD);
     const i0 = Math.floor(sPos);
     let i1 = Math.min(scenes.length - 1, i0 + 1);
@@ -722,7 +1073,7 @@
       }
 
       const pulse = A.pulse + (B.pulse - A.pulse) * f;
-      particles.scale.setScalar(1 + pulse * 0.05 * Math.pow(Math.max(0, Math.sin(t * 2.6)), 12));
+      particles.scale.setScalar(1 + pulse * 0.05 * Math.pow(Math.max(0, Math.sin(t * 2.6)), 12) + window.musicKick * 0.04);
       particles.rotation.y = Math.sin(sPos * 0.35) * 0.18 + mouse.sx * 0.3;
 
       // Camera trôi êm theo nhịp cuộn; màn hình dọc thì lùi xa hơn cho vừa hình.
